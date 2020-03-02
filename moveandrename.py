@@ -1,38 +1,54 @@
+# File used to search in given folder for filenames in a csv file, rename them and move them to a new folder.
+
 import pandas as pd
 import shutil
 import os
 
-# insert csv file 
-# Load CSV with columns of old filenames and new filenames as pandas dataframe
-df = pd.read_csv('/Users/sierraflanagan/Documents/filemovertest/textfilemover.csv') 
-# Get amount of files, to be used to iterate
-total_indeces = df['old_filename'].size
-# Broadest directory of old filenames, code will search subfolders
-oldfolder = '/Users/sierraflanagan/Documents/filemovertest/'
-old_col = 'old_filename' #column heading of old filenames - Changes from .csv to .csv
-new_col = 'new_filename' #column heading of new filenames - Changes from .csv to .csv
+# insert csv file as pandas dataframe
+df = pd.read_csv(#file path to csv file)
 
-# Main method searches folders for old filename, and renames ans copies files to new directory
+#assigning names to columns of dataframe
+total_indeces = df['old_names'].size
+oldfolder = '/Users/sierraflanagan/Documents/AKFiles/Customers/'
+old_col = 'old_names' #column heading of old filenames
+new_col = 'new_names' #column heading of new filenames
+customerId_col = 'customer_id' 
+error_col = 'errornames' #should be blank ... will spit out new excel document and these columns will populate if error thrown
+
+#revisedId_col = 'revised_id' 
+
+
+#print(type(old_col))
+#df.head()
+
 def main():
     for i in range(total_indeces):
         oldName = df.at[i, old_col]
         newName = df.at[i, new_col]
-        old_ext = find_filepath(oldName, oldfolder)
-        print(oldName)
-        new_ext = create_new_filepath(newName)
-        shutil.move(old_ext, new_ext)
-
-# Finds filepath given a file name
+        #oldcustomerId = df.at[i, customerId_col] (these 2 lines added because box name formatting did not support some customer IDs)
+        newcustomerId = df.at[i, revisedId_col]
+        old_ext = find_filepath(oldName, '/Users/sierraflanagan/Documents/AKFiles/Customers/')
+        new_ext = create_new_filepath(newName, newcustomerId)
+        if old_ext == None:
+            df.at[i, error_col] = oldName
+        else:
+           # print(new_ext)
+            shutil.move(old_ext, new_ext)
+        
 def find_filepath(name, path):
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path, topdown = True):
         if name in files:
             return os.path.join(root,name)
 
-# Generates a new filepath to copy and rename files to
-def create_new_filepath(newname):
+def create_new_filepath(newname, c_id):
     #The new folder where the renamed files will be moved
-    newfolder = '/Users/sierraflanagan/Documents/filemovertest/'
-    newfilepath = newfolder + newname
+    newfolder = '/Users/sierraflanagan/Documents/AKFiles/Customers/'
+    # Supports folder structure naming convention
+    newfilepath = newfolder + c_id + '/' + newname
     return newfilepath 
 
 main()
+# creates excel file with names that errored in the 'errornames' column with the name "test1.xlsx"
+# Meant to be edited, delete columns that did not error, fix errored names, save as .csv
+# then used as input for the next run
+df.to_excel('test1.xlsx')
